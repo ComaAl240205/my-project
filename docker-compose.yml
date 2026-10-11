@@ -1,4 +1,5 @@
 services:
+
   database:
     image: postgres:16
     container_name: homelab-postgres
@@ -10,7 +11,7 @@ services:
       POSTGRES_PASSWORD: dev-password-change-me
 
     ports:
-      - "127.0.0.1:5432:5432"
+      - "5432:5432"
 
     volumes:
       - postgres_data:/var/lib/postgresql/data
@@ -20,6 +21,39 @@ services:
       interval: 5s
       timeout: 5s
       retries: 10
+
+  backend:
+    build:
+      context: ./backend
+
+    container_name: homelab-backend
+
+    ports:
+      - "8080:8080"
+
+    depends_on:
+      database:
+        condition: service_healthy
+
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://database:5432/homelab
+      SPRING_DATASOURCE_USERNAME: alex
+      SPRING_DATASOURCE_PASSWORD: dev-password-change-me
+
+  frontend:
+    build:
+      context: ./frontend
+
+    container_name: homelab-frontend
+
+    ports:
+      - "3000:3000"
+
+    depends_on:
+      - backend
+
+    environment:
+      NEXT_PUBLIC_API_URL: http://localhost:8080
 
 volumes:
   postgres_data:

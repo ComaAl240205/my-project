@@ -6,8 +6,7 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
-import java.util.LinkedHashMap;
-import java.util.Map;
+import java.util.*;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
@@ -23,19 +22,22 @@ public class GlobalExceptionHandler {
                 ));
     }
 
-    @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<Map<String, String>> handleValidation(
+    @ExceptionHandler()
+    public ResponseEntity<Map<String, List<String>>> handleValidation(
             MethodArgumentNotValidException exception
     ) {
-        Map<String, String> errors = new LinkedHashMap<>();
+        Map<String, List<String>> errors = new LinkedHashMap<>();
+
 
         exception.getBindingResult()
                 .getFieldErrors()
                 .forEach(error ->
-                        errors.put(
+
+
+                        errors.computeIfAbsent(
                                 error.getField(),
-                                error.getDefaultMessage()
-                        )
+                                key -> new ArrayList<>()
+                        ).add(error.getDefaultMessage())
                 );
 
         return ResponseEntity
